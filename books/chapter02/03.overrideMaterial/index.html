@@ -29,7 +29,9 @@
             /** 화면에 안개효과 추가 */
             scene.fog = new THREE.Fog(0xffffff, 0.015, 100);
             /** 모든 객체를 똑같은 색깔로 설정하는 것 */
-            scene.overrideMaterial = new THREE.MeshLambertMaterial({color:0xffffff});
+            scene.overrideMaterial = new THREE.MeshLambertMaterial({
+                color: 0xffffff
+            });
             /** 물체를 볼 카메라 생성 */
             let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
             /** 화면에 카메라 추가 */
@@ -91,7 +93,6 @@
                 /** 객체의 숫자를 가져오는 변수 설정 */
                 this.numberOfObjects = scene.children.length;
                 /** 큐브를 지우는 함수 추가 */
-
                 this.removeCube = function() {
                     /** 전체 큐브의 갯수 가져오기 */
                     let allChildren = scene.children;
@@ -138,15 +139,15 @@
             /** 컨트롤 화면 생성 */
             var gui = new dat.GUI();
             /** 컨트롤 화면에 회전 기능 추가 */
-        gui.add(controller, 'rotationSpeed', 0, 0.5);
-        /** 컨트롤 화면에 큐브 생성 추가 */
-        gui.add(controller, 'addCube');
-        /** 컨트롤 화면에 큐브 제거 추가 */
-        gui.add(controller, 'removeCube');
-        /** 컨트롤 화면에 큐브 정보 콘솔 표시 기능 추가 */
-        gui.add(controller, 'outputObjects');
-        /** 컨트롤 화면에 큐브 갯수 표시 */
-        gui.add(controller, 'numberOfObjects').listen();
+            gui.add(controller, 'rotationSpeed', 0, 0.5);
+            /** 컨트롤 화면에 큐브 생성 추가 */
+            gui.add(controller, 'addCube');
+            /** 컨트롤 화면에 큐브 제거 추가 */
+            gui.add(controller, 'removeCube');
+            /** 컨트롤 화면에 큐브 정보 콘솔 표시 기능 추가 */
+            gui.add(controller, 'outputObjects');
+            /** 컨트롤 화면에 큐브 갯수 표시 */
+            gui.add(controller, 'numberOfObjects').listen();
             /** 화면 생성 */
             render();
 
