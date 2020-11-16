@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>mesh-properties</title>
+    <script type="text/javascript" src="../../libs/three.js"></script>
+    <script type="text/javascript" src="../../libs/stats.js"></script>
+    <script type="text/javascript" src="../../libs/dat.gui.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    <script type="text/javascript">
+        /** */
+        function Init() {
+            /** 초기 상태 가져오는 함수 및 변수 저장 */
+            let stats = InitStats();
+            /** 화면 만들기 */
+            let scene = new THREE.Scene();
+            /** 카메라 생성 */
+            let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            /** 빌딩 툴을 WebGL로 설정하여 생성 */
+            let renderer = new THREE.WebGLRenderer();
+            /** 색상과 불투명도 설정 */
+            renderer.setClearColor(new THREE.Color(0xEEEEEE, 0.1));
+            /** 화면을 정의 */
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            /** 그림자 사용 설정 */
+            renderer.shadowMapEnabled = true;
+            /** 면을 생성할 정보 입력 */
+            let planeGeometry = new THREE.PlaneGeometry(60, 40, 1, 1);
+            /** 면의 속성을 정의 */
+            let planeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xffffff
+            });
+            /** 면을 생성하기 */
+            let plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            /** 그림자를 여기에 표현하겠다는 설정 */
+            plane.receiveShadow = true;
+            /** 면을 돌리는 설정 */
+            plane.rotation.x = -0.5 * Math.PI;
+            /** 면의 위치 설정 */
+            plane.position.set(0, 0, 0);
+            /** 화면에 면을 더해준다ㅏ. */
+            scene.add(plane);
+            /** 카메라 위치 설정 */
+            camera.position.set(-30, 40, 30);
+            /** 화면을 보는 카메라 설정 */
+            camera.lookAt(scene.position);
+            /** 주변광 만들기 전체적으로 장면의 모든 오브젝트를 동일하게 비춘다. */
+            /** THREE.AmbientLight(color, intensity) */
+            /** color : 인자 값으로 RGB 구성 요소, intensity : 조명 강도 */
+            let ambientLight = new THREE.AmbientLight(0x0c0c0c);
+            /** 화면에 조명 추가 */
+            scene.add(ambientLight);
+            /** 스포트 라이트 추가 */
+            /** 이 빛은 빛에서 멀어질수록 크기가 커지는 원뿔을 따라 한 방향의 단일 지점에서 방출됩니다. */
+            /** THREE.SpotLight(color, intensity, distance, angel, penumbra, decay) */
+            /**
+             * color: 조명의 16진수 색상 설정
+             * intensity: 조명의 강도 설정 
+             * distance: 조명의 최대 범위 기본값은 0(제한 없음)
+             * angle: 사ㅏㅇ한인 Math.PI / 2이고, 그 방향으로부터 광 분산의 최대 각도
+             * penumbra: 감쇠된 스포트라이트 원뿔의 백분율입니다. 0과 1 사이의 값을 사용합니다. 기본 값은 0입니다.
+             * decay: 거리에 따라 빛이 희미해지는 정도 설정
+             */
+            let spotLight = new THREE.SpotLight(0xffffff);
+            /** 스포트라이트 위치 설정 */
+            spotLight.position.set(-40, 60, 020);
+            /** 그림자를 만드는데 사용하는 설정 */
+            spotLight.cashShadow = true;
+            /** 화면에 스포트라이트 추가 */
+            scene.add(spotLight);
+            /** 화면을 보여줄 위치 설정 */
+            document.getElementById("WebGL-output").appendChild(renderer.domElement);
+            /** */
+            let step = 0;
+            /** 화면 조정을 위한 컨트롤 함수 */
+            let controls = new function() {
+                /** 크기 기본 값 설정 */
+                this.scaleX = 1;
+                this.scaleY = 1;
+                this.scaleZ = 1;
+                /** 위치 기본 값 설정 */
+                this.positionX = 0;
+                this.positionY = 4;
+                this.positionZ = 0;
+                /** 회전 기본 값 설정 */
+                this.rotationX = 0;
+                this.rotationY = 0;
+                this.rotationZ = 0;
+                this.scale = 1;
+                /** 이동 기본 값 설정 */
+                this.translateX = 0;
+                this.translateY = 0;
+                this.translateZ = 0;
+                /** 화면에 표현 설정 */
+                this.visible = true;
+                /** 위치 이동을 위한 함수 설정 */
+                this.translate = function() {
+                    /** 상자의 위치 이동 */
+                    cube.translateX(controls.translateX);
+                    cube.translateY(controls.translateY);
+                    cube.translateZ(controls.translateZ);
+                    /** 박스 위치 이동 */
+                    controls.positionX = cube.position.x;
+                    controls.positionY = cube.position.y;
+                    controls.positionZ = cube.position.z;
+                }
+            };
+            /** 속성 설정 */
+            let material = new THREE.MeshLambertMaterial({
+                color: 0x44ff44
+            });
+            /** 박스 정보 설정 */
+            let geom = new THREE.BoxGeometry(5, 8, 3);
+            /** 박스 생성 */
+            let cube = new THREE.Mesh(geom);
+            /** 박스의 y의 위치 설정 */
+            cube.position.y = 4;
+            /** 박스의 그림자 비추기 설정 */
+            cube.cashShadow = true;
+            /** 화면에 박스 설정 */
+            scene.add(cube);
+            /** 컨트롤 박스 객체 생성 */
+            let gui = new dat.GUI();
+            /** 컨트롤 박스에 scale 라벨 만들기 */
+            guiScale = gui.addFolder('scale');
+            /** scale 라벨에 x 스케일 컨트롤 설정 */
+            guiScale.add(controls, 'scaleX', 0, 5);
+            /** scale 라벨에 y 스케일 컨트롤 설정 */
+            guiScale.add(controls, 'scaleY', 0, 5);
+            /** scale 라벨에 z 스케일 컨트롤 설정 */
+            guiScale.add(controls, 'scaleZ', 0, 5);
+            /** 컨트롤 박스에 좌표 라벨 만들기 */
+            guiPosition = gui.addFolder('position');
+            /** 좌표 변경을 위한 컨트롤 설정 */
+            let contX = guiPosition.add(controls, 'positionX', -10, 10);
+            /** 좌표 변경을 위한 컨트롤 설정 */
+            let contY = guiPosition.add(controls, 'positionY', -4, 20);
+            /** 좌표 변경을 위한 컨트롤 설정 */
+            let contZ = guiPosition.add(controls, 'positionZ', -10, 10);
+            /** 좌표 변경을 적용학 위한 이벤틍를 사용하는 설정 */
+            contX.listen();
+            /** 좌표 변경 컨트롤에  값이 변할 시 */
+            contX.onChange(function(value) {
+                /** 좌표 변경 */
+                cube.position.x = controls.positionX;
+            });
+            /** 좌표 변경을 적용학 위한 이벤틍를 사용하는 설정 */
+            contY.listen();
+            /** 좌표 변경 컨트롤에  값이 변할 시 */
+            contY.onChange(function(value) {
+                /** 좌표 변경 */
+                cube.position.y = controls.positionY;
+            });
+            /** 좌표 변경을 적용학 위한 이벤틍를 사용하는 설정 */
+            contZ.listen();
+            /** 좌표 변경 컨트롤에  값이 변할 시 */
+            contZ.onChange((value) => {
+                /** 좌표 변경 */
+                cube.position.z = controls.positionZ;
+            });
+            /** 회전을 위한 컨트롤 라벨 만들기 */
+            guiRotation = gui.addFolder('rotation');
+            /** x축 회전 값 설정 */
+            guiRotation.add(controls, 'rotationX', -4, 4);
+            /** y축 회전 값 설정 */
+            guiRotation.add(controls, 'rotationY', -4, 4);
+            /** z축 회전 값 설정 */
+            guiRotation.add(controls, 'rotationZ', -4, 4);
+            /** 위치 이동 시킬 라벨 생성 */
+            guiTranslate = gui.addFolder('translate');
+            /** x축 위치 이동 */
+            guiTranslate.add(controls, 'translateX', -10, 10);
+            /** y축 위치 이동 */
+            guiTranslate.add(controls, 'translateY', -10, 10);
+            /** z축 위치 이동 */
+            guiTranslate.add(controls, 'translateZ', -10, 10);
+            /** 박스 보이고 안 보이게 설정 */
+            gui.add(controls, 'visible');
+            /** 화면 생성 함수 호출 */
+            render();
+            /** */
+            function render() {
+                /** 상태 업데이트 */
+                stats.update();
+                /** 박스 보이게 하는 것을 control의 변수로 변경 */
+                cube.visible = controls.visible;
+                /** 회전을 변경 */
+                cube.rotation.x = controls.rotationX;
+                /** 회전을 변경 */
+                cube.rotation.y = controls.rotationY;
+                /** 회전을 변경 */
+                cube.rotation.z = controls.rotationZ;
+                /** 크기를 변경 */
+                cube.scale.set(controls.scaleX, controls.scaleY, controls.scaleZ);
+                /** 브라우저 시간 별로 재 호출하여 변경 */
+                requestAnimationFrame(render);
+                /** 화면 렌더링 */
+                renderer.render(scene, camera);
+            }
+            /** 상태 변화를 표시하기 위한 함수 */
+            function InitStats() {
+                /** 상태 객체 생성 */
+                let stats = new Stats();
+                /** FPS로 나타내느 설정 */
+                stats.setMode(0);
+                /** 스타일 지정 */
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+                /** 화면에 보여줄 위치 썰정 */
+                document.getElementById('Stats-output').appendChild(stats.domElement);
+                /** 상태 객체 반환 */
+                return stats;
+            }
+        }
+        /** 화면에 호출 */
+        window.onload = Init;
+    </script>
+</body>
+
+</html>

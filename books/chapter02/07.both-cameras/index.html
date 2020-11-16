@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Both-Cameras</title>
+    <script type="text/javascript" src="../../libs/three.js"></script>
+    <script type="text/javascript" src="../../libs/stats.js"></script>
+    <script type="text/javascript" src="../../libs/dat.gui.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="Stats-output">
+
+    </div>
+    <div id="WebGL-output">
+
+    </div>
+    <script type="text/javascript">
+        function Init() {
+            /** 초기 상태를 가져오기 위한 함수 선언 및 객체 */
+            let stats = InitStats();
+            /** 화면 구성 */
+            let scene = new THREE.Scene();
+            /** 카메라 만들기 */
+            let camera = new THREE.PerspectiveCamera(45, window.innerWidth, window.innerHeight, 0.1, 1000);
+            /** 카메라 위치 정의 */
+            camera.position.x = 120;
+            camera.position.y = 60;
+            camera.position.z = 180;
+            /** 렌더링 툴을 WebGL을 사용한다고 정의 */
+            let renderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            /** 색상과 불투명도 선언 */
+            renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+            /** 보여줄 화면 크기 설정 */
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            /** 면 객체 선언 */
+            let planeGeometry = new THREE.PlaneGeometry(180, 180);
+            /** 면 속성 정의 */
+            let planeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xffffff
+            });
+            /** 면 생성 */
+            let plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            /** 면의 기울기 선언 */
+            plane.rotation.x = -0.5 * Math.PI;
+            /** 면의 위치 선언 */
+            plane.position.x = 0;
+            plane.position.y = 0;
+            plane.position.z = 0;
+            /** 화면에 면 추가 */
+            scene.add(plane);
+            /** 박스 객체 정보 선언 */
+            let cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+            /** */
+            for (let j = 0; j < (planeGeometry.parameters.height / 5); j++) {
+                /** */
+                for (let i = 0; i < planeGeometry.parameters.width / 5; i++) {
+                    /** 랜덤으로 색상 선언 */
+                    let rnd = Math.random() * 0.75 + 0.25;
+                    /** 박스의 속성 정의 */
+                    let cubeMaterial = new THREE.MeshLambertMaterial();
+                    /** 박스의 색깔 선언 */
+                    cubeMaterial.color = new THREE.Color(rnd, 0, 0);
+                    /** 박스 만들기 */
+                    let cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+                    /** 박스 위치 선언 */
+                    cube.position.z = -((planeGeometry.parameters.height) / 2) + 2 + (j * 5);
+                    /** 박스 위치 선언 */
+                    cube.position.x = -((planeGeometry.parameters.width) / 2) + 2 + (i * 5);
+                    /** 박스 위치 선언 */
+                    cube.position.y = 2;
+                    /** 화면에 박스 더하기 */
+                    scene.add(cube);
+                }
+            }
+            /** 특정 방향으로 방출되는 빛 이 빛은 무한히 멀리 떨어져 있는 것처럼 작동하며, 그로부터 생성되는 광선은 모두 평행 일광을 시뮬레이션하는 것이입니다. */
+            /** 태양에서 나오는 모든 광선과 비슷한 기능 */
+            /**
+             * DirectionalLight(color, intensity)
+             * color: 조명의 16진수 색상 기본 값은 0xFFFFFF(흰색)
+             * intensity: 조명의 강도 강도의 숫자 값 기본 값은 1
+             */
+            let directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            /** 평행한 빛의 위치 선언 */
+            directionalLight.position.set(-20, 40, 60);
+            /** 화면에 빛 추가 */
+            scene.add(directionalLight);
+            /** 전체적으로 장면의 모든 오브젝트를 동일하게 비추는 빛 생성 */
+            /** 
+             * AmbientLight(color, intensity)
+             * color: 빛의 색깔 정의 기본 값은 0xffffff(흰색)
+             * intensity: 조명의 강도 기본 값은 1
+             */
+            let ambientLight = new THREE.AmbientLight(0x292929);
+            /** 화면에 빛 추가 */
+            scene.add(ambientLight);
+            /** 화면을 렌더링할 위치 선언 */
+            document.getElementById('WebGL-output').appendChild(renderer.domElement);
+            /** */
+            let step = 0;
+            /** */
+            let controls = new function() {
+                /** 컨트롤 박스에 현재 카메라의 종류 표시를 위한 설정 */
+                this.perspective = "Perspective";
+                /** 카메라 전환 함수 */
+                this.switchCamera = function() {
+                    /** 카메라가 THREE.PerspectiveCamera일 경우 */
+                    if (camera instanceof THREE.PerspectiveCamera) {
+                        /** 카메라를 THREE.OrthographicCamera로 변경 */
+                        camera = new THREE.OrthographicCamera(window.innerWidth / -16, window.innerWidth / 16, window.innerHeight / 16, window.innerHeight / -16, -200, 500);
+                        /** 카메라 위치 변경 */
+                        camera.position.x = 120;
+                        camera.position.y = 60;
+                        camera.position.z = 180;
+                        /** 카메라를 사용하여 화면의 위치를 바라보게 설정 */
+                        camera.lookAt(scene.position);
+                        /** 카메라의 종류 보여주는 것 변경 */
+                        this.perspective = "Orthographic";
+                    } else {
+                        /** 카메라의 종류 변경  */
+                        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+                        /** 카메라의 위치 설정 */
+                        camera.position.set(120, 60, 180);
+                        /** 카메라를 사용하여 화면의 위치를 바라보게 설정 */
+                        camera.lookAt(scene.position);
+                        /** 카메라의 종류 보여주는 것 변경 */
+                        this.perspective = "Perspective";
+                    }
+                };
+            };
+            /** 컨트롤 구성을 위한 객체 선언 */
+            let gui = new dat.GUI();
+            /** 컨트롤 객체에 카메라 변경 기능 추가 */
+            gui.add(controls, "switchCamera");
+            /** 카메라 변경 시 카메라 종류를 보여주는 창 이벤트 등록 */
+            gui.add(controls, "perspective").listen();
+            /** 카메라 보기 */
+            camera.lookAt(scene.position);
+            /** 화면 만들기 */
+            render();
+            /** 화면을 만드는 함수 */
+            function render() {
+                /** 상태를 업데이트 */
+                stats.update();
+                /** 브라우저가 자동으로 주기 별로 함수 호출 */
+                requestAnimationFrame(render);
+                /** 화면과 카메라 빌드 */
+                renderer.render(scene, camera);
+            }
+            /** 화면에 상태창을 보여주기 위한 함수 */
+            function InitStats() {
+                /** 상태를 표현하기 위한 객체 */
+                let stats = new Stats();
+                /** 상태를 FPS로 표현하기 위한 설정 */
+                stats.setMode(0);
+                /** 상태창 스타일 설정 */
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+                /** 상태창 표시 위치 설정 */
+                document.getElementById('Stats-output').appendChild(stats.domElement);
+                /** 상태창 객체 반환 */
+                return stats;
+            }
+        }
+        window.onload = Init;
+    </script>
+</body>
+
+</html>
