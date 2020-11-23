@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>spot-light</title>
+    <script type="text/javascript" src="../../libs/three.js"></script>
+    <script type="text/javascript" src="../../libs/stats.js"></script>
+    <script type="text/javascript" src="../../libs/dat.gui.js"></script>
+    <style>
+        body {
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    <script type="text/javascript">
+        function Init() {
+            /** 스포트 라이트 움직임 설정 flag */
+            let stopMovingLight = false;
+            /** 상태를 가져오기 위한 함수 호출 및 객체 반환 */
+            let stats = InitStats();
+            /** 화면 만들기 */
+            let scene = new THREE.Scene();
+            /** 카메라 만들기ㅣ */
+            let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            /** 렌더링을 WebGL로 한다고 설정 */
+            let renderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            /** 렌더링 기본 색상 초기화 */
+            renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+            /** 렌더링 크기 설정 */
+            /** 장치 픽셀 비율을 고려하여 출력 캔버스의 크기(너비, 높이)로 조정하고 뷰포트를 (0, 0)부터 시작하여 해당 크기에 맞게 설정합니다.
+             * updateStyle을 false로 설정하면, 출력 캔버스의 스타일 변경이 방지된다.
+             */
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            /** 그림자를 사용하기 위한 설정 */
+            renderer.shadowMapEnabled = true;
+            /** 그림자 맵 유형(필터링되지 않음, 닫기ㅣ ㅣ비율 필터리ㅣㅇ, 셰이더에서 이중 선형 필터링을 사용한 비율 닫기 필터링)을 정의한다. */
+            renderer.shadowMapType = THREE.PCFShadowMap;
+            /** 면 정보 생성 */
+            let planeGeometry = new THREE.PlaneGeometry(60, 20, 1, 1);
+            /** 면 속성 정의 */
+            let planeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xFFFFFF
+            });
+            /** 면 생성 */
+            let plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            /** 그림자 생성 설정 */
+            plane.receivedShadow = true;
+            /** 면을 회전 */
+            plane.rotation.x = -0.5 * Math.PI;
+            /** 면의 위치 설정 */
+            plane.position.set(15, 0, 0);
+            /** 화면에 면을 더하기 */
+            scene.add(plane);
+            /** 박스 정보 정의 */
+            let cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+            /** 박스 속성 정의 */
+            let cubeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xFF3333
+            });
+            /** 박스 생성 */
+            let cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            /** 박스 그림자 사용 */
+            cube.castShadow = true;
+            /** 박스 위치 설정 */
+            cube.position.set(-4, 3, 0);
+            /** 화면에 장면 더하기 */
+            scene.add(cube);
+            /** 구 정의 정의 */
+            let sphereGeometry = new THREE.SphereGeometry(4, 20, 20);
+            /** 구 속성 정의 */
+            let sphereMaterial = new THREE.MeshLambertMaterial({
+                color: 0x7777FF
+            });
+            /** 구 생성 */
+            let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            /** 화면에 구 더하기 */
+            scene.add(sphere);
+            /** 카메라 위치 설정 */
+            camera.position.set(-35, 30, 25);
+            /** 카메라로 보는 지점 설정 */
+            camera.lookAt(new THREE.Vector3(10, 0, 0));
+            /** 빛 색깔 정의 */
+            let ambiColor = "#1C1C1C";
+            /** 객체에 광원을 더해주는 빛 생성 */
+            /**  전체적으로 장면의 모든 오브젝트를 동일하게 비춘다. */
+            /** THREE.AmbientLight(color, intensity) */
+            /**
+             * color : 좀명 색깔
+             * intensity: 조명 강도
+             */
+            let ambientLight = new THREE.AmbientLight(ambiColor);
+            /** 화면에 빛 더하기 */
+            scene.add(ambientLight);
+            /** 원뿔 모양의 빛을 생성 */
+            /** THREE.SpotLight(color, intensity, distance, angle, penumbra, decay) */
+            /**
+             * color: 조명 샋상
+             * intensity: 조명 강도
+             * distance: 좀명의 최대 범위 기본값 0(제한없음)
+             * angle: 광 분산의 최대 각도
+             * penumbra: 감쇠된 스포트라이트 원뿔의 백분율 0에서 1 사이의 값을 사용한다.
+             * decay: 빛의 거리에 따라 희미한 정도 표시
+             */
+            let spotLight0 = new THREE.SpotLight(0xcccccc);
+            /** 스포트 라이트 위치 설정 */
+            spotLight0.position.set(-40, 30, -10);
+            /** 스포트 라이트로 비추는 지점 설정 */
+            spotLight0.lookAt(plane);
+            /** 화면에 스포트 라이트 더하기 */
+            scene.add(spotLight0);
+            /** 타겟의 물체 생썽 */
+            let target = new THREE.Object3D();
+            /** 타겟의 위치 설정 */
+            target.position = new THREE.Vector3(5, 0, 0);
+            /** 포인트 빛 설정 */
+            let pointColor = "#ffffff";
+            /** 원뿔 모양의 빛을 생성 */
+            /** THREE.SpotLight(color, intensity, distance, angle, penumbra, decay) */
+            /**
+             * color: 조명 샋상
+             * intensity: 조명 강도
+             * distance: 좀명의 최대 범위 기본값 0(제한없음)
+             * angle: 광 분산의 최대 각도
+             * penumbra: 감쇠된 스포트라이트 원뿔의 백분율 0에서 1 사이의 값을 사용한다.
+             * decay: 빛의 거리에 따라 희미한 정도 표시
+             */
+            let spotLight = new THREE.SpotLight(pointColor);
+            /** 스포트 라이트의 위치 설정 */
+            spotLight.position.set(-40, 60, -10);
+            /** 이 빛을 사용해서 그림자 생성할 거라는 설정 */
+            spotLight.castShadow = true;
+            /** 그림자를 고르게 분포 시키기 위한 값 설정 */
+            spotLight.shadowCameraNear = 2;
+            /** 그림자를 고르게 분포 시키기 위한 값 설정 */
+            spotLight.shadowCameraFar = 200;
+            /** 그림자를 고르게 분포 시키기 위한 값 설정 */
+            spotLight.shadowCameraFov = 30;
+            /** 그림자를 비출 위치 설정 */
+            spotLight.target = plane;
+            /** 스포트 라이트의 거리 설정 ㄴ*/
+            spotLight.distance = 0;
+            /** 스포트 라이트의 빛의 폭을 설정 */
+            spotLight.angle = 0.4;
+            /** 화면에 스포트 라이트 더하기 */
+            scene.add(spotLight);
+            /** 구 정보 정 */
+            let sphereLight = new THREE.SphereGeometry(0.2);
+            /** 구의 속성 정의 */
+            let sphereLightMaterial = new THREE.MeshLambertMaterial({
+                color: 0xac6c25
+            });
+            /** 구 생성 */
+            let sphereLightMesh = new THREE.Mesh(sphereLight, sphereLightMaterial);
+            /** 구의 위치 설정 */
+            sphereLightMesh.position = new THREE.Vector3(3, 20, 3);
+            /** 화면에 구 더하기 */
+            scene.add(sphereLightMesh);
+            /** 렌더링할 위치 설정 */
+            document.getElementById("WebGL-output").appendChild(renderer.domElement);
+            /** */
+            let step = 0;
+            /** 회전을 위한 변수 */
+            let invert = 1;
+            /** 코사인 사인 값을 변경하기 위한 변수 */
+            let phase = 0;
+            /** 컨트롤을 위한 변수 함수 */
+            let controls = new function() {
+                /** 회전 속도 정의 */
+                this.rotationSpeed = 0.03;
+                /** 공 튀기는 속도 정의 */
+                this.bouncingSpeed = 0.03;
+                /** 빛의 색깔 정 */
+                this.ambientColor = ambiColor;
+                /** 포인트 빛의 색깔 정의 */
+                this.pointColor = pointColor;
+                /** 선명도 설정 */
+                this.intensity = 1;
+                /** 거리 설정 */
+                this.distance = 0;
+                /** 빛의 강도 설정 */
+                this.exponent = 30;
+                /** 스포트라이트의 폭 설정 */
+                this.angle = 0.1;
+                /** 빛이 비추는 것을 확인하기 위한 변수 */
+                this.debug = false;
+                /** 그림자 생성 설정 */
+                this.castShadow = true;
+                /** */
+                this.onlyShadow = false;
+                /** 빌을 비출 타겟 설정 */
+                this.target = "Plane";
+                /** 빛의 움직임 멈추기 위한 설정 */
+                this.stopMovingLight = false;
+            };
+            /** 컨트롤 박스 객체 생성  */
+            let gui = new dat.GUI();
+            /** 칼라 설정을 위한 변수 설정 및 이벤트 설정 */
+            gui.addColor(controls, "ambientColor").onChange(function(e) {
+                ambientLight.color = new THREE.Color(e);
+            });
+            /** 칼라 설정을 위한 변수 설정 및 이벤트 설정 */
+            gui.addColor(controls, 'pointColor').onChange(function(e) {
+                spotLight.color = new THREE.Color(e);
+            });
+            /** 빛의 폭을 설정하기 위한 설정 및 이벤트 설정 */
+            gui.add(controls, 'angle', 0, Math.PI * 2).onChange(function(e) {
+                spotLight.angle = e;
+            });
+            /** 빛의 선명도를 설정하기 위한 이벤트 설정 */
+            gui.add(controls, 'intensity', 0, 5).onChange(function(e) {
+                spotLight.intensity = e;
+            });
+            /** 빛을 비출 수 있는 거리 설정 및 이벤트 설정 */
+            gui.add(controls, 'distance', 0, 200).onChange(function(e) {
+                spotLight.distance = e;
+            });
+            /** 빛의 강도 설정하기 위한 정의 및 이벤트 설정 */
+            gui.add(controls, 'exponent', 0, 100).onChange(function(e) {
+                spotLight.exponent = e;
+            });
+            /** 빛의 생성 정보를 보여주기 위한 정의 및 이벤트 설정 */
+            gui.add(controls, 'debug').onChange(function(e) {
+                spotLight.shadowCameraVisible = e;
+            });
+            /** 그림자 보여주기 위한 설정 이벤트 정의 */
+            gui.add(controls, 'castShadow').onChange(function(e) {
+                spotLight.castShadow = e;
+            });
+            /** */
+            gui.add(controls, 'onlyShadow').onChange(function(e) {
+                spotLight.onyShadow = e;
+            });
+            /** 빛을 비출 타겟 설정 및 이벤트 정의 */
+            gui.add(controls, 'target', ['Plane', 'Sphere', 'Cube']).onChange(function(e) {
+                console.log(e);
+                /** 타겟의 변경을 위한 스위치 문 */
+                switch (e) {
+                    case 'Plane':
+                        spotLight.target = plane;
+                        break;
+                    case 'Sphere':
+                        spotLight.target = sphere;
+                        break;
+                    case 'Cube':
+                        spotLight.target = cube;
+                        break;
+                }
+                /** 빛의 움직이 설정 및 이벤트 정의 */
+                gui.add(controls, "stopMovingLight").onChange(function(e) {
+                    stopMovingLight = e;
+                });
+            });
+            /** 렌더링 함수 */
+            render();
+            /** 렌더링 함수 정의 */
+            function render() {
+                /** 화면 정보를 업데이트 */
+                stats.update();
+                /** 박스 회전 */
+                cube.rotation.x += controls.rotationSpeed;
+                cube.rotation.y += controls.rotationSpeed;
+                cube.rotation.z += controls.rotationSpeed;
+                /** 공 튀기기 속도 정의 */
+                step += controls.bouncingSpeed;
+                /** 구의 위치 변경 */
+                sphere.position.x = 20 + (10 * (Math.cos(step)));
+                sphere.position.y = 2 + (10 * (Math.abs(Math.sin(step))));
+                /** 빛의 움지기임 설정 */
+                if (!stopMovingLight) {
+                    if (phase > 2 * Math.PI) {
+                        invert = invert * -1;
+                        phase -= 2 * Math.PI;
+                    } else {
+                        phase += controls.rotationSpeed;
+                    }
+                    /** 빛의 위치 변경 */
+                    sphereLightMesh.position.z = +(7 * (Math.sin(phase)));
+                    sphereLightMesh.position.x = +(14 * (Math.cos(phase)));
+                    sphereLightMesh.position.y = 10;
+                    /** */
+                    if (invert < 0) {
+                        /** */
+                        let pivot = 14;
+                        /** */
+                        sphereLightMesh.position.x = (invert * (sphereLightMesh.position.x - pivot)) + pivot;
+                    }
+                    /** 빛의 위치를 구의 위치를 복사하여 변경 */
+                    spotLight.position.copy(sphereLightMesh.position);
+                }
+                /** 브라우저에서 자동으로 렌더링 함수 호출 */
+                requestAnimationFrame(render);
+                /** 화면과 카메라를 렌더링 */
+                renderer.render(scene, camera);
+            }
+            /** 상태를 보여주기 위한 함수 */
+            function InitStats() {
+                /** 상태를 보여줄 객체 생성 */
+                let stats = new Stats();
+                /** FPS로 보여주기 위한 상태 설정 */
+                stats.setMode(0);
+                /** 상태창의 스타일 설정 */
+                stats.domElement.style.position = "absolute";
+                stats.domElement.style.left = "0px";
+                stats.domElement.style.top = "0px";
+                /** 상태창의 위치 설정 */
+                document.getElementById("Stats-output").appendChild(stats.domElement);
+                /** 상태 객체 반환 */
+                return stats;
+            }
+        }
+        /** 렌더링 실행 */
+        window.onload = Init;
+    </script>
+</body>
+
+</html>
