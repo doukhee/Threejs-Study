@@ -51,7 +51,7 @@
             /** 면 생성 */
             let plane = new THREE.Mesh(planeGeometry, planeMaterial);
             /** 그림자 생성 설정 */
-            plane.receivedShadow = true;
+            plane.receiveShadow = true;
             /** 면을 회전 */
             plane.rotation.x = -0.5 * Math.PI;
             /** 면의 위치 설정 */
@@ -80,6 +80,10 @@
             });
             /** 구 생성 */
             let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            /** 구의 위치 설정 */
+            sphere.position.set(20, 0, 2);
+            /** 구의 그림자 생성 설정 */
+            sphere.castShadow = true;
             /** 화면에 구 더하기 */
             scene.add(sphere);
             /** 카메라 위치 설정 */
