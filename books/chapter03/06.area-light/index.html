@@ -27,15 +27,15 @@
     <div id="WebGL-outputs"></div>
     <script>
         function Init() {
-            /** */
+            /** 상태 초기화를 위한 변수 및 함수 호출 */
             let stats = InitStats();
-            /** */
+            /** 화면 생성 */
             let scene = new THREE.Scene();
-            /** */
+            /** 카메라 생성 */
             let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            /** */
+            /** 화면에 카메라 추가 */
             scene.add(camera);
-            /** */
+            /** 렌더링 선언 */
             let renderer = new THREE.WebGLDeferredRenderer({
                 width: window.innerWidth,
                 height: window.innerHeight,
@@ -44,108 +44,108 @@
                 tonemapping: THREE.FilmicOperator,
                 brightness: 2.5
             });
-            /** */
+            /** 면 정보 생성 */
             let planeGeometry = new THREE.PlaneGeometry(70, 70, 1, 1);
-            /** */
+            /** 면 속성 생성 */
             let planeMaterial = new THREE.MeshLambertMaterial({
                 color: 0xffffff,
                 specular: 0xffffff,
                 shininess: 200
             });
-            /** */
+            /** 면 생성 */
             let plane = new THEE.Mesh(planeGeometry, planeMaterial);
             //plane.receiveShadow = true;
-            /** */
+            /** 면 위치 및 회전 설정 */
             plane.rotation.x = -0.5 * Math.PI;
             plane.position.set(0, 0, 0);
-            /** */
+            /** 화면에 면 추가 */
             scene.add(plane);
-            /** */
+            /** 카메라 위치 설정 */
             camera.position.x = 20;
             camera.position.y = 30;
             camera.position.z = 21;
-            /** */
+            /** 렌더링 위치 설정 */
             document.getElementById("WebGL-output").appendChild(renderer.domElement);
             /** */
             let step = 0;
-            /** */
+            /** 스포트 라이트 생성 */
             let spotLight0 = new THREE.SpotLight(0xcccccc);
-            /** */
+            /** 스포트 라이트 위치 설정 */
             spotLight0.position.set(-40, 60, -10);
-            /** */
+            /** 스포트 라이트 빛의 세기 설정 */
             spotLight0.intensity = 0.1;
-            /** */
+            /** 스포트 라이트로 비출 객체 설정 */
             spotLight0.lookAt(plane);
-            /** */
+            /** 화면에 스포트 라이트 추가 */
             scene.add(spotLight0);
-            /** */
+            /** 직사각형 빛 생성 및 빛의 세기 설정? */
             let areaLight1 = new THREE.AreaLight(0xff0000, 3);
-            /** */
+            /** 직사각형 빛 위치 설정 */
             areaLight1.position.set(-10, 10, -35);
-            /** */
+            /** 직사각형빛 회전 설정 */
             areaLight1.rotation.set(-Math.PI / 2, 0, 0);
-            /** */
+            /** 직사가형 빛의 가로 설정 및 높이 설정 */
             areaLight1.width = 4;
             areaLight1.height = 9.9;
-            /** */
+            /** 화면에 직사각형 빛 추가 */
             scene.add(areaLight1);
-            /** */
+            /** 직사각형 빛 생성 */
             let areaLight2 = new THREE.AreaLight(0x00ff00, 3);
-            /** */
+            /** 직사각형 빛 위치 설정 */
             areaLight2.position.set(0, 10, -35);
-            /** */
+            /** 직사각형 빛 회전 설정 */
             areaLight2.rotation.set(-Math.PI / 2, 0, 0);
-            /** */
+            /** 직사각형 빛 가로 높이 설정 */
             areaLight2.width = 4;
             areaLight2.height = 9.9;
-            /** */
+            /** 화면에 직사각형 빛 추가 */
             scene.add(areaLight2);
-            /** */
+            /** 직사각형 빛 생성 */
             let areaLight3 = new THREE.AreaLight(0x0000ff, 3);
-            /** */
+            /** 빛위 위치 밎 회전, 가로와ㅏ 높이 설정 */
             areaLight3.position.set(10, 10, -35);
             areaLight3.rotation.set(-Math.PI / 2, 0, 0);
             areaLight3.width = 4;
             areaLight3.height = 9.9;
-            /** */
+            /** 화면에 직사각형 빛 추가 */
             scene.add(areaLight3);
-            /** */
+            /** 정육면체 정보 생성 */
             let planeGeometry1 = new THREE.BoxGeometry(4, 10, 0);
-            /** */
+            /** 정육면체 속성 생성 */
             let planeGeometry1Mat = new THREE.MeshLambertMaterial({
                 color: 0xff0000
             });
-            /** */
+            /** 정육면체 생성 */
             let plane1 = new THREE.Mesh(planeGeometry1, planeGeometry1Mat);
-            /** */
+            /** 정육면체 위치를 직사각형 빛 1번째 위치랑 동일하게 설정 */
             plane1.position.copy(areaLight1.position);
-            /** */
+            /** 화면에 정육면체 추가 */
             scene.add(plane1);
-            /** */
+            /** 정육면체 정보 생성 */
             let planeGeometry2 = new THREE.BoxGeometry(4, 10, 0);
-            /** */
+            /** 정육면체 속성 생성 */
             let planeGeometry2Mat = new THREE.MeshLambertMaterial({
                 color: 0x00ff00
             });
-            /** */
+            /** 정육면체 생성 */
             let plane2 = new THREE.Mesh(planeGeometry2, planeGeometry2Mat);
-            /** */
+            /** 정육면체 위치를 직사각형 빛 2번째와 동일하게 설정 */
             plane2.position.copy(areaLight2.position);
-            /** */
+            /** 화면에 정육면체 추가 */
             scene.add(plane2);
-            /** */
+            /** 정육면체 정보 생성 */
             let planeGeometry3 = new THREE.BoxGeometry(4, 10, 0);
-            /** */
+            /** 정육면체 속성 생성 */
             let planeGeometry3Mat = new THREE.MeshLambertMaterial({
                 color: 0x0000ff
             });
-            /** */
+            /** 정육면체 생성 */
             let plane3 = new THREE.Mesh(planeGeometry3, planeGeometry3Mat);
-            /** */
+            /** 정육몀체 위치를 직사각형 빛 3번쨰 위치와 동일하게 설정 */
             plane3.position.copy(areaLight3.position);
-            /** */
+            /** 화면에 정육면체 추가 */
             scene.add(plane3);
-            /** */
+            /** 컨트롤할 변수 설정 */
             let controls = new function() {
                 this.rotationSpeed = 0.02;
                 this.color1 = 0xff0000;
@@ -155,71 +155,93 @@
                 this.intensity2 = 2;
                 this.intensity3 = 2;
             };
-            /** */
+            /** 컨트롤 기능 객체 추가 */
             let gui = new dat.GUI();
+            /** 색상 변경 이벤트 추가 */
             gui.addColor(controls, 'color1').onChange(function(e) {
+                /** 직사각형 1번째 빛 색상 변경 */
                 areaLight1.color = new THREE.Color(e);
+                /** 첫번째 정육면체 색상 변경 */
                 planeGeometry1Mat.color = new THREE.Color(e);
+                /** 화면에서 1번째 정육면체 제거 */
                 scene.remove(plane1);
+                /** 새로운 정육면체 생성 */
                 plane1 = new THREE.Mesh(planeGeometry1, planeGeometry1Mat);
+                /** 새로운 정육면체 위치 1번째 직사각형 빛의 위치로 설정 */
                 plane1.position.copy(areaLight1.position);
+                /** 화면에 정육면체 추가 */
                 scene.add(plane1);
             });
-            /** */
+            /** 빛의 강도 변경 이벤트 추가 */
             gui.add(controls, "intensity1", 0, 5).onChange(function(e) {
+                /** 1번째 빛의 강도 변경 */
                 areaLight1.intensity = e;
             });
-            /** */
+            /** 색상 변경 이벤트 추가 */
             gui.addColor(controls, 'color2').onChange(function(e) {
+                /** 2번째 직사각형 빛 색상 변경 */
                 areaLight2.color = new THREE.Color(e);
+                /** 2번째 정육면체 색상 변경 */
                 planeGeometry2Mat.color = new THREE.Color(e);
+                /** 화면에서 정육면체 제거 */
                 scene.remove(plane2);
+                /** 정육면체 생성 */
                 plane2 = new THREE.Mesh(planeGeometry1, planeGeometry2Mat);
+                /** 정육면체 위치 2번째 직사각형 빛 위치로 설정 */
                 plane2.position.copy(areaLight2.position);
+                /** 화면에 정육면체 추가 */
                 scene.add(plane2);
             });
-            /** */
+            /** 빛의 강도 변경 이벤트 추가 */
             gui.add(controls, 'intensity2', 0, 5).onChange(function(e) {
+                /** 2번째 직사각형 빛 강도 변경 */
                 areaLight2.intensity = e;
             });
-            /** */
+            /** 색상 변경 이벤트 추가 */
             gui.addColor(controls, 'color3').onChange(function(e) {
+                /** 3번째 직사각형 빛 색상 변경 */
                 areaLight3.color = new THREE.Color(e);
+                /** 정육면체 색상 변경 */
                 planeGeometry3Mat.color = new THREE.Color(e);
+                /** 화면에서 정육면체 제거 */
                 scene.remove(plane3);
+                /** 정육면체 생성 */
                 plane3 = new THREE.Mesh(planeGeometry3, planeGeometry3Mat);
+                /** 정육면체 위치를 3번째 직사각형 빛 위치로 설정 */
                 plane3.position.copy(areaLight3.position);
+                /** 화면에 정육면체 추가 */
                 scene.add(plane3);
             });
-            /** */
+            /** 빛의 강도 변경 이벤트 추가 */
             gui.add(controls, 'intensity3', 0, 5).onChange(function(e) {
+                /** 3번째 직사각형 빛 강도 변경 */
                 areaLight3.intensity = e;
             });
-            /** */
+            /** 화면 렌더링 함수 호출 */
             render();
 
-            /** */
+            /** 렌더링 함수 선언 */
             function render() {
-                /** */
+                /** 상태 업데이트 */
                 stats.update();
-                /** */
+                /** 브라우저가 자동으로 렌더링 함수 호출 */
                 requestAnimationFrame(render);
-                /** */
+                /** 렌더링 */
                 renderer.render();
             }
-            /** */
+            /** 상태 변화를 위한 함수 */
             function InitStats() {
-                /** */
+                /** 상태 객체 선언 */
                 let stats = new Stats();
-                /** */
+                /** FPS를 보여주기 위한 설정 */
                 stats.setMode(0);
-                /** */
+                /** 상태 창의 스타일 설정 */
                 stats.domElement.style.position = 'absolute';
                 stats.domElement.style.left = '0px';
                 stats.domElement.style.top = "0px";
-                /** */
+                /** 상태창 보여줄 위치 설정 */
                 document.getElementById("Stats-output").appendChild(stats.domElement);
-                /** */
+                /** 상태 객체 반환 */
                 return stats;
             }
 
