@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>basic-mesh-meterial</title>
+    <script type="text/javascript" src="../../libs/three.js"></script>
+    <script type="text/javascript" src="../../libs/dat.gui.js"></script>
+    <script type="text/javascript" src="../../libs/stats.js"></script>
+    <script type="text/javascript" src="../../libs/CanvasRenderer.js"></script>
+    <script type="text/javascript" src="../../libs/Projector.js"></script>
+    <style>
+        body {
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="WebGL-output"></div>
+    <div id="Stats-output"></div>
+    <script type="text/javascript">
+        /** 초기화 함수 선언 */
+        function Init() {
+            /** 상태 초기화 및 상태 객체 선언 */
+            let stats = InitStats();
+            /** 화면 생성 */
+            let scene = new THREE.Scene();
+            /** 카메라 생성 */
+            let camera = new THREE.PerspectiveCamera(45, window.innerHeight / window.innerWidth, 0.1, 1000);
+            /** 렌더링을 할 주체 담을 객체 선언 */
+            let renderer;
+            /** webGLRenderer 선언 및 설정 */
+            let webGLRenderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            /** 색상 초기화 */
+            webGLRenderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+            /** 크기 초기화 */
+            webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+            /** 켄버스 렌더러 선언 및 생성 */
+            let canvasRenderer = new THREE.CanvasRenderer();
+            /** 켄버스 렌더러 크기 설정 */
+            canvasRenderer.setSize(window.innerWidth, window.innerHeight);
+            /** 처음 렌더러 webGLRenderer로 선언 */
+            renderer = webGLRenderer;
+            /** 판 속성 설정 */
+            let groundGeom = new THREE.PlaneGeometry(100, 100, 4, 4);
+            /** 판 객체 생성 */
+            let groundMesh = new THREE.Mesh(groundGeom, new THREE.MeshBasicMaterial({
+                color: 0x777777
+            }));
+            /** 판 회전 */
+            groundMesh.rotation.x = -Math.PI / 2;
+            /** 판 위치 설정 */
+            groundMesh.position.set(0, -20, 0);
+            /** 화면에 판 더하기 */
+            scene.add(groundMesh);
+            /** 구 정보 생성 */
+            let sphereGeometry = new THREE.SphereGeometry(15, 20, 20);
+            /** 박스 정보 생성 */
+            let cubeGeometry = new THREE.BoxGeometry(15, 15, 15);
+            /** 판 정보 생성 */
+            let planeGeometry = new THREE.PlaneGeometry(14, 14, 4, 4);
+            /** 기본 물질 정보 생성 */
+            let meshMaterial = new THREE.MeshBasicMaterial({
+                color: 0x777777
+            });
+            /** 구 생성 */
+            let sphere = new THREE.Mesh(sphereGeometry, meshMaterial);
+            /** 박스 생성 */
+            let cube = new THREE.Mesh(cubeGeometry, meshMaterial);
+            /** 면 생성 */
+            let plane = new THREE.Mesh(planeGeometry, meshMaterial);
+            /** 귀 위치 설정 */
+            sphere.position.set(0, 3, 2);
+            /** 박스 위치 구 위치와 동일하게 선언 */
+            cube.position = sphere.position;
+            /** 면 위치 박스 위치 복사하여 선언 */
+            plane.position.copy(cube.position);
+            /** 화면에 박스 더하기 */
+            scene.add(cube);
+            /** 카메라 위치 설정 */
+            camera.position.set(-20, 50, 40);
+            /** 카메라로 볼 위치 설정 */
+            camera.lookAt(new THREE.vector3(10, 0, 0));
+            /** 객체에 광원을 더해주는 빛 생성 */
+            /**  전체적으로 장면의 모든 오브젝트를 동일하게 비춘다. */
+            /** THREE.AmbientLight(color, intensity) */
+            /**
+             * color : 좀명 색깔
+             * intensity: 조명 강도
+             */
+            let ambientLight = new THREE.AmbientLight(0x0c0c0c);
+            /** 화면에 빛 더하기 */
+            scene.add(ambientLight);
+            /** 원뿔 모양의 빛을 생성 */
+            /** THREE.SpotLight(color, intensity, distance, angle, penumbra, decay) */
+            /**
+             * color: 조명 샋상
+             * intensity: 조명 강도
+             * distance: 좀명의 최대 범위 기본값 0(제한없음)
+             * angle: 광 분산의 최대 각도
+             * penumbra: 감쇠된 스포트라이트 원뿔의 백분율 0에서 1 사이의 값을 사용한다.
+             * decay: 빛의 거리에 따라 희미한 정도 표시
+             */
+            let spotLight = new THREE.SpotLight(0xffffff);
+            /** 빛 위치 설정 */
+            spotLight.position.set(-40, 60, -10);
+            /** 그림자를 만들 빛이라는 것을 설정 */
+            spotLight.castShadow = true;
+            /** 화면에 스포트라이트 더하기 */
+            scene.add(spotLight);
+            /** 화면에 보여줄 위치 설정 */
+            document.getElementById("WebGL-output").appendChild(renderer.domElement);
+            /** */
+            let step = 0;
+            /** */
+            let oldContext = null;
+            /** 컨트롤할 사항들을 담은 객체 생성 */
+            let controls = new function() {
+                this.rotationSpeed = 0.02;
+                this.bouncingSpeed = 0.03;
+                this.opacity = meshMaterial.opacity;
+                this.transparent = meshMaterial.transparent;
+                this.overdraw = meshMaterial.overdraw;
+                this.visible = meshMaterial.visible;
+                this.side = 'front';
+                this.color = meshMaterial.color.getStyle();
+                this.wireframe = meshMaterial.wireframe;
+                this.wireframeLinewidth = meshMaterial.wireframeLinewidth;
+                this.wireFrameLineJoin = meshMaterial.wireFrameLineJoin;
+
+                this.selectedMesh = "cube";
+                /** 렌더링 변경을 할 경우 진행될 사항 */
+                this.switchRenderer = function() {
+                    /** webGLRenderer의 경우 */
+                    if (renderer instanceof THREE.WebGLRenderer) {
+                        /** 렌더링 툴 변경 */
+                        renderer = canvasRenderer;
+                        /** 지우기 */
+                        document.getElementById("WebGL-output").empty();
+                        /** 다시 그리기 */
+                        document.getElementById("WebGL-output").appendChild(renderer.domElement);
+                    } else {
+                        renderer = webGLRenderer;
+                        document.getElementById("WebGL-output").empty();
+                        document.getElementById("WebGL-output").appendChild(renderer.domElement);
+                    }
+                }
+            };
+
+            /** 컨트롤 박스 객체 생성 */
+            let gui = new dat.GUI();
+            /** 물질 변경을 담은 트리형태로 생성 */
+            let spGui = gui.addFolder("Mesh");
+            /** 투명도 설을 윌한 변수 선언 및 이벤트 등록 */
+            spGui.add(controls, "opacity", 0, 1).onChange(function(e) {
+                /** 물질의 불투명도 변경 */
+                meshMaterial.opacity = e;
+            });
+            /** 불투명도를 보일 것인지 결정하는 이벤트 등록 */
+            spGui.add(controls, "transparent").onChange(function(e) {
+                /** 불투명도를 결정한다. false의 경우 조금 더 밝은 색상이 된다. */
+                meshMaterial.transparent = e;
+            });
+            /** 뼈대 형태로만 볼 것인지 결정하는 이벤트 선언 및 등록 */
+            spGui.add(controls, "wireframe").onChange(function(e) {
+                /** 뼈대 형태로 물체를 구현 */
+                meshMaterial.wireframe = e;
+            });
+            /** 와이어 프레임의 선의 두께를 변경하는 이벤트 선언 및 등록 */
+            spGui.controls("wireframeLinewidth", 0, 20).onChange(function(e) {
+                meshMaterial.wireframeLinewidth = e;
+            });
+            /** 물체를 보여질지 아닐지 설정하는 이벤트 등록 */
+            spGui.add(controls, 'visible').onChange(function(e) {
+                meshMaterial.visible = e;
+            });
+            /** 어느 면에 물질이 적용되는지 정의 하는 이벤트 선언 및 등록 */
+            spGui.add(controls, 'side', ["front", "back", "double"]).onChange(function(e) {
+                switch (e) {
+                    case "front":
+                        /** 물질을 객체 전면(외부)에 적용을 한다는 설정 */
+                        meshMaterial.side = THREE.FrontSide;
+                        break;
+                    case "back":
+                        /** 후면(내부)에 물질 속성을 적용 */
+                        meshMaterial.side = THREE.BackSide;
+                        break;
+                    case "double":
+                        /** 후면과 외부에 물질 속성을 적용 */
+                        meshMaterial.side = THREE.DoubleSide;
+                        break;
+                }
+                /** */
+                meshMaterial.needsUpdate = true;
+            });
+            /** 물질의 색상을 변경하는 이벤트 생성 및 등록 */
+            spGui.addColor(controls, "color").onChange(function(e) {
+                /** 색상 변경 */
+                meshMaterial.color.setStyle(e);
+            });
+            /** 물질의 종류를 변경하는 이벤트 등록 및 생성 */
+            spGui.add(controls, "selectedMesh", ["cube", "sphere", "plane"]).onChange(function(e) {
+                /** 화면에서 물질 제거 */
+                scene.remove(plane);
+                scene.remove(cube);
+                scene.remove(sphere);
+                /** 선택된 사항에 따라서 물질 생성 */
+                switch (e) {
+                    case "cube":
+                        scene.add(cube);
+                        break;
+                    case "sphere":
+                        scene.add(sphere);
+                        break;
+                    case "plane":
+                        scene.add(plane);
+                        break;
+                }
+            });
+            /** 렌더링 변경 등록 */
+            gui.add(controls, "switchRenderer");
+            /** 켄버스 렌더링을 폴더 생성 */
+            let cvGui = gui.addFolder("Canvas Renderer");
+            /** 다각형을 조금 더 크게 렌더링을 하기 위한 이벤트 선언 및 등록 */
+            cvGui.add(controls, "overdraw").onChange(function(e) {
+                /** 다각형을 조금 더 크게 보이도록 변경 */
+                meshMaterial.overdraw = e;
+            });
+            /** 라인 조인트의 모양을 정의합니다. 가능한 값은 "round", "bevel"및 "miter"입니다. 기본값은 '둥근'입니다. */
+            /** 선의 연결 부분을 정의 하는 것 */
+            cvGui.add(controls, "wireFrameLineJoin", ["round", "bevel", "miter"]).onChange(function(e) {
+                /** 조인트 모양을 변경 */
+                meshMaterial.wireFrameLineJoin = e;
+            });
+            /** 렌더링 함수 */
+            function render() {
+                /** 상태 업데이트 */
+                stats.update();
+                /** 물체 회전 설정 */
+                cube.rotation.y = step += 0.01;
+                plane.rotation.y = step;
+                sphere.rotation.y = step;
+                /** 브라우저가 자동으로 재 실행 설정 */
+                requestAnimationFrame(render);
+                /** 화면과 카메라 렌더링 */
+                renderer.render(scene, camera);
+            }
+            /** 초기 상태를 가져오기 위한 함수 */
+            function InitStats() {
+                /** 상태 객체 선언 */
+                let stats = new Stats();
+                /** FPS로 설정 */
+                stats.setMode(0);
+                /** 상태창 스타일 설정 */
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+                /** 상태창을 보여줄 위치 설정 */
+                document.getElementById("Stats-output").appendChild(stats.domElement);
+                /** 상태 객체 반환 */
+                return stats;
+            }
+        }
+        /** */
+        window.onload = Init;
+    </script>
+</body>
+
+</html>
