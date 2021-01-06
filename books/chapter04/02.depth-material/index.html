@@ -15,178 +15,153 @@
 </head>
 
 <body>
-    <div id="webGL-output"></div>
+    <div id="WebGL-output"></div>
     <div id="Stats-output"></div>
     <script>
+        /** */
         function Init() {
-            /** */
+            /** 초기 상태 확인 및 상태 객체 선언 */
             let stats = InitStats();
-            /** */
+            /** 화면 객체 생성 */
             let scene = new THREE.Scene();
-            /** */
-            let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            /** */
+            /** overrideMaterial: null이 아닌 경우 장면의 모든 항목이 해당 재질로 렌더링 되도록 강제합니다. 기본값은 null이다. */
+            /** THREE.MeshDepthMaterial(parameter: Object)
+             *  깊이별로 형상을 그리기위한 재료이다ㅏ. 카메라 근거리 및 원거리 평면으로 기준으로 합니다. 흰색이 가장 가깝고 검은색이 가장 멀다.
+             *  parameter: 재료의 모양을 정의하는 하나 이상의 속성을 가진 객체 재료의 모든 속성(Material에서 상속된 모든 속성 포함)을 여기에 전달 가능하다.
+             */
+            scene.overrideMaterial = new THREE.MeshDepthMaterial();
+            /** 카메라 생성 */
+            let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 130);
+            /** 렌더링 툴 선언 */
             let renderer = new THREE.WebGLRenderer({
                 antialias: true
             });
-            /** */
-            renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
-            /** */
+            /** 렌더링 툴 색상 초기화 */
+            renderer.setClearColor(new THREE.Color(0x000000, 1.0));
+            /** 렌더링 크기 설정 */
             renderer.setSize(window.innerWidth, window.innerHeight);
-            /** */
+            /** 그림자 생성을 한다는 설정 */
             renderer.shadowMapEnabled = true;
-            /** */
-            let planeGeometry = new THREE.PlaneGeometry(60, 40, 1, 1);
-            /** */
-            let planeMaterial = new THREE.MeshLambertMaterial({
-                color: 0xFFFFFF
-            });
-            /** */
-            let plane = new THREE.Mesh(planeGeometry, planeMaterial);
-            /** */
-            plane.receiveShadow = true;
-            /** */
-            plane.rotation.x = -0.5 * Math.PI;
-            /** */
-            plane.position.set(0, 0, 0);
-            /** */
-            scene.add(plane);
-            /** */
-            camera.position.set(-30, 40, 30);
-            /** */
+            /** 카메라 위치 정의 */
+            camera.position.set(-50, 40, 50);
+            /** 카메라로 볼 객체 설정 */
             camera.lookAt(scene.position);
-            /** */
-            let ambientLight = new THREE.AmbientLight(0x0c0c0c);
-            /** */
-            scene.add(ambientLight);
-            /** */
-            let spotLight = new THREE.SpotLight(0xFFFFFF);
-            /** */
-            spotLight.position.set(-40, 60, 020);
-            /** */
-            spotLight.castShadow = true;
-            /** */
-            scene.add(spotLight);
-            /** */
+            /** 렌더링하는 화면 위치 설정 */
             document.getElementById("WebGL-output").appendChild(renderer.domElement);
             /** */
             let step = 0;
-            /** */
+            /** 컨트롤할 객체 생성 */
             let controls = new function() {
-                /** */
-                this.scaleX = 1;
-                this.scaleY = 1;
-                this.scaleZ = 1;
-                /** */
-                this.positionX = 0;
-                this.positionY = 4;
-                this.positionZ = 0;
-                /** */
-                this.rotationX = 0;
-                this.rotationY = 0;
-                this.rotationZ = 0;
-                this.scale = 1;
-                /** */
-                this.translationX = 0;
-                this.translationY = 0;
-                this.translationZ = 0;
-                /** */
-                this.visible = true;
-                /** */
-                this.translate = function() {
-                    /** */
-                    cube.translateX(controls.translationX);
-                    cube.translateY(controls.translationY);
-                    cube.translateZ(controls.translationZ);
-                    /** */
-                    controls.positionX = cube.position.x;
-                    controls.positionY = cube.position.y;
-                    controls.positionZ = cube.position.z;
-
+                /** 변환할 객체 생성 */
+                this.cameraNear = camera.near;
+                this.cameraFar = camera.far;
+                this.rotationSpeed = 0.02;
+                this.numberOfObjects = scene.children.length;
+                /** 박스 삭제 기능 */
+                this.removeCube = function() {
+                    /** 화면의 요소 객체 배열을 가져와서 정의 */
+                    let allChildren = scene.children;
+                    /** 마지막 객체 정의 */
+                    let lastObject = allChildren[allChildren.length - 1];
+                    /** 마지막 객체가 물체일때 */
+                    if (lastObject instanceof THREE.Mesh) {
+                        /** 화면에서 마지막 물체 제거 */
+                        scene.remove(lastObject);
+                        /** 객체의 숫자 재정의 */
+                        this.numberOfObjects = scene.children.length;
+                    }
+                };
+                /** 박스 추가 기능 */
+                this.addCube = function() {
+                    /** 생성할 박스의 랜덤의 크기를 반올림하여 설정 */
+                    let cubeSize = Math.ceil(3 + (Math.random() * 3));
+                    /** 생성할 박스의 정보 생성 */
+                    let cubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+                    /** 생성할 박스의 재질 설정 */
+                    let cubeMaterial = new THREE.MeshLambertMaterial({
+                        color: Math.random() * 0xFFFFFF
+                    });
+                    /** 박스 물질 생성 */
+                    let cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+                    /** 박스를 그림자 사용 설정 */
+                    cube.castShadow = true;
+                    /** 박스 위치 정의 */
+                    cube.position.x = -60 + Math.round((Math.random() * 180));
+                    cube.position.y = Math.round((Math.random() * 10));
+                    cube.position.z = -100 + Math.round((Math.random() * 150));
+                    /** 화면에 박스 추가 */
+                    scene.add(cube);
+                    /** 객체의 숫자 재정의 */
+                    this.numberOfObjects = scene.children.length;
+                };
+                /** 콘솔에 객체 정보를 보여주기 위한 함수 */
+                this.outputObjects = function() {
+                    /** 콘솔창에 객체 정보 출력 */
+                    console.log(scene.children);
                 }
             };
-            /** */
-            let material = new THREE.MeshLambertMaterial({
-                color: 0x44ff44
-            });
-            /** */
-            let geom = new THREE.BoxGeometry(5, 8, 3);
-            /** */
-            let cube = new THREE.Mesh(geom, material);
-            /** */
-            cube.position.y = 4;
-            cube.castShadow = true;
-            /** */
-            scene.add(cube);
-
-            /** */
+            /** 컨트롤 박스 객체 생성 */
             let gui = new dat.GUI();
-            /** */
-            guiScale = gui.addFolder('scale');
-            /** */
-            guiScale.add(controls, 'scaleX', 0, 5);
-            /** */
-            guiScale.add(controls, 'scaleY', 0, 5);
-            /** */
-            guiScale.add(controls, 'scaleZ', 0, 5);
-            /** */
-            guiPosition = gui.addFolder('position');
-            /** */
-            let contX = guiPosition.add(controls, 'positionX', -10, 10);
-            let contY = guiPosition.add(controls, 'positionY', -4, 20);
-            let contZ = guiPosition.add(controls, 'positionZ', -10, 10);
-            /** */
-            contX.listen();
-            /** */
-            contX.onChange(function(value) {
-                cube.position.x = controls.positionX;
+            /** 컨트롤할 요소 컨트롤 박스에 추가 */
+            gui.add(controls, 'rotationSpeed', 0, 0.5);
+            gui.add(controls, 'addCube');
+            gui.add(controls, 'removeCube');
+            /** 카메라 위치 변경 이벤트 추가 */
+            gui.add(controls, 'cameraNear', 0, 50).onChange(function(e) {
+                /** 카메라 근거리 변경 */
+                camera.near = e;
             });
-            /** */
-            contY.listen();
-            /** */
-            contY.onChange(function(value) {
-                cube.position.y = controls.positionY;
+            /** 카메라 위치 변경 이벤트 추가 */
+            gui.add(controls, 'cameraFar', 50, 200).onChange(function(e) {
+                /** 카메라 멀어지는 위치 추가 */
+                camera.far = e;
             });
-            /** */
-            contZ.listen();
-            /** */
-            contZ.onChange(function(value) {
-                cube.position.z = controls.positionZ;
-            });
-            /** */
-            guiRotation = gui.addFolder("rotation");
-            /** */
-            guiRotation.add(controls, 'rotationX', -4, 4);
-            guiRotation.add(controls, 'rotationY', -4, 4);
-            guiRotation.add(controls, 'rotationZ', -4, 4);
-            /** */
-            guiTranslate = gui.addFolder('translate');
-            /** */
-            guiTranslate.add(controls, 'translateX', -10, 10);
-            guiTranslate.add(controls, 'translateY', -10, 10);
-            guiTranslate.add(controls, 'translateZ', -10, 10);
-            guiTranslate.add(controls, 'translate');
-            /** */
-            gui.add(controls, 'visible');
-            /** */
+            /** 박스 추가를 위한 변수 선언 및 초기화 */
+            let i = 0;
+            /** 박스 추가를 위한 반복문 */
+            while (i < 10) {
+                /** 박스 추가 함수 호출 */
+                controls.addCube();
+                i++;
+            }
+            /** 렌더링 함수 호출 */
             render();
-            /** */
+            /** 렌더링 함수 */
             function render() {
-                /** */
+                /** 상태 객체 업데이트 */
+                stats.update();
+                /** 화면 요소 확인을 위한 탐색 */
+                scene.traverse(function(e) {
+                    /** 탐색 중에 객체가 물체일 경우 */
+                    if (e instanceof THREE.Mesh) {
+                        /** 객체 물체 회전 */
+                        e.rotation.x += controls.rotationSpeed;
+                        e.rotation.y += controls.rotationSpeed;
+                        e.rotation.z += controls.rotationSpeed;
+                    }
+                });
+                /** 브라우저가ㅏ 자동으로 렌더링 호출 */
+                requestAnimationFrame(render);
+                /** 화면과 카메라 렌더링 */
+                renderer.render(scene, camera);
+            }
+            /** 초기상태를 가져오기 위한 함수 */
+            function InitStats() {
+                /** 상태 객체 생성 */
                 let stats = new Stats();
-                /** */
+                /** FPS 모드로 설정 */
                 stats.setMode(0);
-                /** */
+                /** 상태 css 설정 */
                 stats.domElement.style.position = 'absolute';
                 stats.domElement.style.left = '0px';
                 stats.domElement.style.top = '0px';
-                /** */
-                document.getElementById('Stats-output').appendChild(stats.domElement);
-                /** */
+                /** 상태를 표현할 위치 정의 */
+                document.getElementById("Stats-output").appendChild(stats.domElement);
+                /** 객체 반환 */
                 return stats;
             }
         };
-        /** */
+        /** 전체 로딩이 완료 되었을 시 함수 호출 */
         window.onload = Init;
     </script>
 </body>
