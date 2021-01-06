@@ -19,8 +19,174 @@
     <div id="Stats-output"></div>
     <script>
         function Init() {
+            /** */
+            let stats = InitStats();
+            /** */
+            let scene = new THREE.Scene();
+            /** */
+            let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            /** */
+            let renderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            /** */
+            renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+            /** */
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            /** */
+            renderer.shadowMapEnabled = true;
+            /** */
+            let planeGeometry = new THREE.PlaneGeometry(60, 40, 1, 1);
+            /** */
+            let planeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xFFFFFF
+            });
+            /** */
+            let plane = new THREE.Mesh(planeGeometry, planeMaterial);
+            /** */
+            plane.receiveShadow = true;
+            /** */
+            plane.rotation.x = -0.5 * Math.PI;
+            /** */
+            plane.position.set(0, 0, 0);
+            /** */
+            scene.add(plane);
+            /** */
+            camera.position.set(-30, 40, 30);
+            /** */
+            camera.lookAt(scene.position);
+            /** */
+            let ambientLight = new THREE.AmbientLight(0x0c0c0c);
+            /** */
+            scene.add(ambientLight);
+            /** */
+            let spotLight = new THREE.SpotLight(0xFFFFFF);
+            /** */
+            spotLight.position.set(-40, 60, 020);
+            /** */
+            spotLight.castShadow = true;
+            /** */
+            scene.add(spotLight);
+            /** */
+            document.getElementById("WebGL-output").appendChild(renderer.domElement);
+            /** */
+            let step = 0;
+            /** */
+            let controls = new function() {
+                /** */
+                this.scaleX = 1;
+                this.scaleY = 1;
+                this.scaleZ = 1;
+                /** */
+                this.positionX = 0;
+                this.positionY = 4;
+                this.positionZ = 0;
+                /** */
+                this.rotationX = 0;
+                this.rotationY = 0;
+                this.rotationZ = 0;
+                this.scale = 1;
+                /** */
+                this.translationX = 0;
+                this.translationY = 0;
+                this.translationZ = 0;
+                /** */
+                this.visible = true;
+                /** */
+                this.translate = function() {
+                    /** */
+                    cube.translateX(controls.translationX);
+                    cube.translateY(controls.translationY);
+                    cube.translateZ(controls.translationZ);
+                    /** */
+                    controls.positionX = cube.position.x;
+                    controls.positionY = cube.position.y;
+                    controls.positionZ = cube.position.z;
 
+                }
+            };
+            /** */
+            let material = new THREE.MeshLambertMaterial({
+                color: 0x44ff44
+            });
+            /** */
+            let geom = new THREE.BoxGeometry(5, 8, 3);
+            /** */
+            let cube = new THREE.Mesh(geom, material);
+            /** */
+            cube.position.y = 4;
+            cube.castShadow = true;
+            /** */
+            scene.add(cube);
+
+            /** */
+            let gui = new dat.GUI();
+            /** */
+            guiScale = gui.addFolder('scale');
+            /** */
+            guiScale.add(controls, 'scaleX', 0, 5);
+            /** */
+            guiScale.add(controls, 'scaleY', 0, 5);
+            /** */
+            guiScale.add(controls, 'scaleZ', 0, 5);
+            /** */
+            guiPosition = gui.addFolder('position');
+            /** */
+            let contX = guiPosition.add(controls, 'positionX', -10, 10);
+            let contY = guiPosition.add(controls, 'positionY', -4, 20);
+            let contZ = guiPosition.add(controls, 'positionZ', -10, 10);
+            /** */
+            contX.listen();
+            /** */
+            contX.onChange(function(value) {
+                cube.position.x = controls.positionX;
+            });
+            /** */
+            contY.listen();
+            /** */
+            contY.onChange(function(value) {
+                cube.position.y = controls.positionY;
+            });
+            /** */
+            contZ.listen();
+            /** */
+            contZ.onChange(function(value) {
+                cube.position.z = controls.positionZ;
+            });
+            /** */
+            guiRotation = gui.addFolder("rotation");
+            /** */
+            guiRotation.add(controls, 'rotationX', -4, 4);
+            guiRotation.add(controls, 'rotationY', -4, 4);
+            guiRotation.add(controls, 'rotationZ', -4, 4);
+            /** */
+            guiTranslate = gui.addFolder('translate');
+            /** */
+            guiTranslate.add(controls, 'translateX', -10, 10);
+            guiTranslate.add(controls, 'translateY', -10, 10);
+            guiTranslate.add(controls, 'translateZ', -10, 10);
+            guiTranslate.add(controls, 'translate');
+            /** */
+            gui.add(controls, 'visible');
+            /** */
+            render();
+            /** */
+            function render() {
+                /** */
+                let stats = new Stats();
+                /** */
+                stats.setMode(0);
+                /** */
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+                /** */
+                document.getElementById('Stats-output').appendChild(stats.domElement);
+                /** */
+                return stats;
+            }
         };
+        /** */
         window.onload = Init;
     </script>
 </body>
