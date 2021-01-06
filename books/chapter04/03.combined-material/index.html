@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>combined-material</title>
+    <script type="text/script" src="../../libs/three.js"></script>
+    <script type="text/script" src="../../libs/stats.js"></script>
+    <script type="text/script" src="../../libs/dat.gui.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    <script type="text/javascript">
+        function Init() {
+            /** */
+            let stats = InitStats();
+            /** */
+            let scene = new THREE.Scene();
+            /** */
+            let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 130);
+        };
+        /** */
+        window.onload = Init;
+    </script>
+</body>
+
+</html>
