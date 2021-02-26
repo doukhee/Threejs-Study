@@ -25,6 +25,27 @@
             let scene = new THREE.Scene();
             /** */
             let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 130);
+
+            /** */
+            render();
+            /** */
+            function render() {}
+            /** */
+            function InitStats() {
+                /** */
+                let stats = new Stats();
+                /** */
+                stats.setMode(0);
+                /** */
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.left = '0px';
+                stats.domElement.style.top = '0px';
+                /** */
+                document.getElementById("Stats-output").appendChild(scene.domElement);
+                /** */
+                return stats;
+
+            }
         };
         /** */
         window.onload = Init;
